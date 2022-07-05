@@ -4,6 +4,7 @@ import com.tanyuge.utils.EnvironmentVariableUtil;
 import com.tanyuge.utils.PingUtil;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -102,9 +103,10 @@ public class RobotController {
     }
 
     /**
-     * 周期性执行
+     * 定时执行一次
      */
-//    @Scheduled(cron = "${robot.schedule.cron1}")
+    @Scheduled(cron = "${robot.schedule.cron2}")
+    @Scheduled(cron = "${robot.schedule.cron4}")
     @GetMapping("/connect/of/timing")
     public void connectOfTiming() {
         this.setParams();
@@ -133,10 +135,9 @@ public class RobotController {
     }
 
     /**
-     * 定时执行一次
+     * 周期性执行
      */
-    @Scheduled(cron = "${robot.schedule.cron2}")
-    @Scheduled(cron = "${robot.schedule.cron4}")
+//    @Scheduled(cron = "${robot.schedule.cron1}")
     @GetMapping("/connect/of/cycle")
     public void connectOfCycle() {
         this.setParams();
@@ -189,6 +190,11 @@ public class RobotController {
             log.error("请在系统中配置环境变量: 用户名：{}, 密码：{}, 目标网络地址{}",
                     usernameOfKey, passwordOfKey, urlOfKey);
         }
+    }
+
+    @Test
+    public void autoConnectionTest() {
+        this.connectOfTiming();
     }
 
 }
