@@ -1,0 +1,4 @@
+#指定默认配置文件
+spring:
+  profiles:
+    active: dev
