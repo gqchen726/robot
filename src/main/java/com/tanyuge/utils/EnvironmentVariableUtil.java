@@ -52,7 +52,6 @@ public class EnvironmentVariableUtil {
         InputStreamReader inputStreamReader1 =
                 new InputStreamReader(process.getErrorStream(), new ExtendedCharsets().charsetForName("GBK"));
         String encoding = inputStreamReader1.getEncoding();
-        logger.info("cmd控制台输出编码: {}", encoding);
         BufferedReader br1 = new BufferedReader(inputStreamReader1);
         String line1 = null;
         StringBuilder result1 = new StringBuilder();

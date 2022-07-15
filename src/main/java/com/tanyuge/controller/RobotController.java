@@ -9,7 +9,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,8 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,6 +50,10 @@ public class RobotController {
     private static final String logEnd = "---自动登录程序结束---";
     private static final String chromeDriverName = "chromedriver.exe";
     private static final String WEBDRIVER_CHROME_DRIVER = "webdriver.chrome.driver";
+    private static final String ID_LABLE_LOGOUTBUTTON_AUTH = "id_lable_logoutbutton_auth";
+    private static final String ID_USERNAME = "id_userName";
+    private static final String ID_USERPWD = "id_userPwd";
+    private static final String ID_LABLE_LOGINBUTTON_AUTH = "id_lable_loginbutton_auth";
     @Value("${project.base.path}")
     private String basePath;
     @Value("${imc.username}")
@@ -68,7 +73,11 @@ public class RobotController {
 //    @Scheduled(cron = "${robot.schedule.cron}")
     @GetMapping("/connect/of/ping/timeout")
     public void connectOfPingTimeout() {
-        this.setParams();
+        try {
+            this.setParams();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         String ipaddr = "110.42.157.115";
         int pingTimes = 5;
         int pingTimeout = 1000;
@@ -77,28 +86,7 @@ public class RobotController {
                 ipaddr, pingTimes, pingTimeout, pingResult);
         log.info("base path is {}", basePath);
         if (!pingResult) {
-            log.info(logStart);
-            String driverPath = basePath + chromeDriverName;
-            File file = new File(driverPath);
-            System.setProperty(WEBDRIVER_CHROME_DRIVER, file.getAbsolutePath());
-            if (ObjectUtils.isEmpty(driver)) {
-                ChromeOptions chromeOptions = new ChromeOptions();
-                driver = new ChromeDriver(chromeOptions);
-            }
-            driver.manage().window().maximize();
-//            driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-            driver.get(url);
-
-            // 先登出
-            driver.findElement(By.id("id_lable_logoutbutton_auth")).click();
-            driver.findElement(By.id("id_userName")).sendKeys(username);
-            driver.findElement(By.id("id_userPwd")).sendKeys(password);
-
-            // 再登入
-            driver.findElement(By.id("id_lable_loginbutton_auth")).click();
-
-            driver.close();
-            log.info(logEnd);
+            this.autoConnect();
         }
     }
 
@@ -109,7 +97,15 @@ public class RobotController {
     @Scheduled(cron = "${robot.schedule.cron4}")
     @GetMapping("/connect/of/timing")
     public void connectOfTiming() {
-        this.setParams();
+        this.autoConnect();
+    }
+
+    private void autoConnect() {
+        try {
+            this.setParams();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         log.info(logStart);
         String driverPath = basePath + chromeDriverName;
         File file = new File(driverPath);
@@ -119,16 +115,27 @@ public class RobotController {
             driver = new ChromeDriver(chromeOptions);
         }
         driver.manage().window().maximize();
-//            driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+//        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        driver.manage().timeouts().pageLoadTimeout(5, TimeUnit.SECONDS);
         driver.get(url);
 
+        WebDriverWait wait = new WebDriverWait(driver, 5);
+        // 查找id为“id_lable_logoutbutton_auth"的元素是否加载出来了（已经在页面DOM中存在）
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id(ID_LABLE_LOGOUTBUTTON_AUTH)));
+        wait.until(ExpectedConditions.elementToBeClickable(By.id(ID_LABLE_LOGOUTBUTTON_AUTH)));
         // 先登出
-        driver.findElement(By.id("id_lable_logoutbutton_auth")).click();
-        driver.findElement(By.id("id_userName")).sendKeys(username);
-        driver.findElement(By.id("id_userPwd")).sendKeys(password);
+        driver.findElement(By.id(ID_LABLE_LOGOUTBUTTON_AUTH)).click();
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id(ID_USERNAME)));
+        driver.findElement(By.id(ID_USERNAME)).sendKeys(username);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id(ID_USERPWD)));
+        driver.findElement(By.id(ID_USERPWD)).sendKeys(password);
 
         // 再登入
-        driver.findElement(By.id("id_lable_loginbutton_auth")).click();
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id(ID_LABLE_LOGINBUTTON_AUTH)));
+        wait.until(ExpectedConditions.elementToBeClickable(By.id(ID_LABLE_LOGINBUTTON_AUTH)));
+        driver.findElement(By.id(ID_LABLE_LOGINBUTTON_AUTH)).click();
 
         driver.close();
         log.info(logEnd);
@@ -140,38 +147,16 @@ public class RobotController {
 //    @Scheduled(cron = "${robot.schedule.cron1}")
     @GetMapping("/connect/of/cycle")
     public void connectOfCycle() {
-        this.setParams();
-        log.info(logStart);
-        String driverPath = basePath + chromeDriverName;
-        File file = new File(driverPath);
-        System.setProperty(WEBDRIVER_CHROME_DRIVER, file.getAbsolutePath());
-        if (ObjectUtils.isEmpty(driver)) {
-            ChromeOptions chromeOptions = new ChromeOptions();
-            driver = new ChromeDriver(chromeOptions);
-        }
-        driver.manage().window().maximize();
-//            driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-        driver.get(url);
-
-        // 先登出
-        driver.findElement(By.id("id_lable_logoutbutton_auth")).click();
-        driver.findElement(By.id("id_userName")).sendKeys(username);
-        driver.findElement(By.id("id_userPwd")).sendKeys(password);
-
-        // 再登入
-        driver.findElement(By.id("id_lable_loginbutton_auth")).click();
-
-        driver.close();
-        log.info(logEnd);
+        this.autoConnect();
     }
 
-    private void setParams() {
-        String usernameOfKey = "imc_username";
-        String passwordOfKey = "imc_password";
-        String urlOfKey = "imc_url";
-        String imcUsername = EnvironmentVariableUtil.getSystemEnvironmentVariable(usernameOfKey);
-        String imcPassword = EnvironmentVariableUtil.getSystemEnvironmentVariable(passwordOfKey);
-        String imcUrl = EnvironmentVariableUtil.getSystemEnvironmentVariable(urlOfKey);
+    private void setParams() throws Exception {
+        String usernameOfKey = "ImcUser";
+        String passwordOfKey = "ImcPassword";
+        String urlOfKey = "ImcUrl";
+        String imcUsername = EnvironmentVariableUtil.getCustomEnvironmentVariable(usernameOfKey);
+        String imcPassword = EnvironmentVariableUtil.getCustomEnvironmentVariable(passwordOfKey);
+        String imcUrl = EnvironmentVariableUtil.getCustomEnvironmentVariable(urlOfKey);
         if (StringUtils.isBlank(username) && StringUtils.isNoneBlank(imcUsername)) {
             username = imcUsername;
         }
@@ -189,12 +174,15 @@ public class RobotController {
         ) {
             log.error("请在系统中配置环境变量: 用户名：{}, 密码：{}, 目标网络地址{}",
                     usernameOfKey, passwordOfKey, urlOfKey);
+        } else {
+            log.info("读取环境变量完成");
         }
     }
 
     @Test
     public void autoConnectionTest() {
-        this.connectOfTiming();
+        basePath = "C:/dev/env/browerDriver/";
+        this.connectOfPingTimeout();
     }
 
 }
