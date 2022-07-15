@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.cs.ext.ExtendedCharsets;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,6 +18,9 @@ import java.nio.charset.StandardCharsets;
  */
 public class EnvironmentVariableUtil {
 
+    private static final String errorMessagePrefix = "环境变量 ";
+    private static final String errorMessageSuffix = " 没有定义";
+
     private static final Logger logger = LoggerFactory.getLogger(EnvironmentVariableUtil.class);
 
     public static String getSystemProperty(String key) {
@@ -27,7 +31,7 @@ public class EnvironmentVariableUtil {
         return System.getenv(key);
     }
 
-    public static String getCustomEnvironmentVariable(String key) throws IOException {
+    public static String getCustomEnvironmentVariable(String key) throws Exception {
         String command = "cmd /c set " + key;
         logger.info("cmd控制台执行命令：{}", command);
         Process process = Runtime.getRuntime().exec(command);
@@ -42,8 +46,11 @@ public class EnvironmentVariableUtil {
         br.close();
         inputStreamReader.close();
 
+        // 环境变量未定义的消息
+        String errorMessageOfNotDefine = errorMessagePrefix + key + errorMessageSuffix;
+
         InputStreamReader inputStreamReader1 =
-                new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8);
+                new InputStreamReader(process.getErrorStream(), new ExtendedCharsets().charsetForName("GBK"));
         String encoding = inputStreamReader1.getEncoding();
         logger.info("cmd控制台输出编码: {}", encoding);
         BufferedReader br1 = new BufferedReader(inputStreamReader1);
@@ -56,6 +63,11 @@ public class EnvironmentVariableUtil {
         inputStreamReader1.close();
         if (StringUtils.isNoneBlank(result1)) {
             logger.error("cmd控制台执行命令出错：{}", result1);
+            throw new RuntimeException(result1.toString());
+        }
+        if (errorMessageOfNotDefine.equals(result.toString())) {
+            logger.error(errorMessageOfNotDefine);
+            throw new RuntimeException(errorMessageOfNotDefine);
         }
         return result.toString();
     }
@@ -63,11 +75,13 @@ public class EnvironmentVariableUtil {
     @Test
     public void getCustomEnvironmentVariableTest() {
         try {
-            String imcUser = getCustomEnvironmentVariable("ImcUser");
+            /*String imcUser = getCustomEnvironmentVariable("ImcUser");
             String ImcPassword = getCustomEnvironmentVariable("ImcPassword");
             String ImcUrl = getCustomEnvironmentVariable("ImcUrl");
-            logger.info("读取结果: {} {} {} ", imcUser, ImcPassword, ImcUrl);
-        } catch (IOException e) {
+            logger.info("读取结果: {} {} {} ", imcUser, ImcPassword, ImcUrl);*/
+            String test = getCustomEnvironmentVariable("123Test");
+            logger.info("读取结果: {}", test);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
