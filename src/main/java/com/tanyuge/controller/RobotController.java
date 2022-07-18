@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -56,11 +57,8 @@ public class RobotController {
     private static final String ID_LABLE_LOGINBUTTON_AUTH = "id_lable_loginbutton_auth";
     @Value("${project.base.path}")
     private String basePath;
-    @Value("${imc.username}")
     private String username;
-    @Value("${imc.password}")
     private String password;
-    @Value("${imc.url}")
     private String url;
 
 
@@ -119,7 +117,7 @@ public class RobotController {
         driver.manage().timeouts().pageLoadTimeout(5, TimeUnit.SECONDS);
         driver.get(url);
 
-        WebDriverWait wait = new WebDriverWait(driver, 5);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(5));
         // 查找id为“id_lable_logoutbutton_auth"的元素是否加载出来了（已经在页面DOM中存在）
         wait.until(ExpectedConditions.presenceOfElementLocated(By.id(ID_LABLE_LOGOUTBUTTON_AUTH)));
         wait.until(ExpectedConditions.elementToBeClickable(By.id(ID_LABLE_LOGOUTBUTTON_AUTH)));
