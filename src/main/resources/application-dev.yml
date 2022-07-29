@@ -2,8 +2,8 @@
 # 工作日执行
 robot:
   schedule:
-    # 每30分钟执行一次
-    cron: 0 0/30 * * * ?
+    # 每5分钟执行一次
+    cron: 0 0/5 * * * ?
     # 下午9点整执行一次
     cron1: 0 0 21 * * ?
     # 从下午9点开始每5分钟执行一次
@@ -12,16 +12,27 @@ robot:
     cron3: 0 0 0-6 * * ?
     # 早上8点整执行一次
     cron4: 0 0 8 * * ?
+    # 晚上9点整执行一次
+    cron5: 0 0 21 * * ?
+    # 测试
+    cron6: 0 24 10 * * ?
 
-# 账号信息
-
-
-#项目文件路径
+# 项目文件路径
 project:
   base:
     path: C:/dev/env/browerDriver/
-
+    # 目标域名，网络PING时使用
+    targetHost: www.baidu.com
+    # 环境变量名
+    # 重连地址
+    urlOfKey: ImcUrl
+    # 登入账户名
+    usernameOfKey: ImcUser
+    # 登入密码
+    passwordOfKey: ImcPassword
 
 #服务端口号
 server:
   port: 8080
+  servlet:
+    context-path: /

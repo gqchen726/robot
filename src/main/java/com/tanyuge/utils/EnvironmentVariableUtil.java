@@ -12,7 +12,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 /**
- * description
+ * 获取windows系统环境变量的工具类
  *
  * @author guoqing.chen01@hand-china.com 2022/07/05 14:10
  */
@@ -51,7 +51,6 @@ public class EnvironmentVariableUtil {
 
         InputStreamReader inputStreamReader1 =
                 new InputStreamReader(process.getErrorStream(), new ExtendedCharsets().charsetForName("GBK"));
-        String encoding = inputStreamReader1.getEncoding();
         BufferedReader br1 = new BufferedReader(inputStreamReader1);
         String line1 = null;
         StringBuilder result1 = new StringBuilder();
@@ -68,7 +67,14 @@ public class EnvironmentVariableUtil {
             logger.error(errorMessageOfNotDefine);
             throw new RuntimeException(errorMessageOfNotDefine);
         }
-        return result.toString();
+        String resultStr = result.toString();
+        if (StringUtils.isNoneBlank(resultStr)) {
+            String[] strings = resultStr.split("=");
+            if (strings.length > 1) {
+                return strings[1];
+            }
+        }
+        return null;
     }
 
     @Test
